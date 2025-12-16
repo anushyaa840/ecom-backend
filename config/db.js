@@ -3,7 +3,8 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 const connectdb = async () => {
-    try {
+    try {  
+    
         console.log("Attempting to connect to MongoDB Atlas...");
         
         // Connect WITHOUT the deprecated options
