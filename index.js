@@ -1,33 +1,50 @@
-const express = require("express");
-const ProductRoute = require("./routes/productRoute");
-const dotenv = require("dotenv");
-const cors = require("cors");
-const path = require("path");
+import express from "express";
+import mongoose from "mongoose";
+import cors from "cors";
+import dotenv from "dotenv";
+import path from "path";
 
 dotenv.config();
 
-const app = express(); // ✅ declare ONCE
+const app = express();
 
-// connect to database
-const connectDB = require("./config/db");
-connectDB();
-
-// CORS
-app.use(cors({
-  origin: (origin, cb) => cb(null, origin),
-  credentials: true
-}));
-
+// Middlewares
+app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
-// ✅ Serve images from uploads folder
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+// Serve images
+app.use("/uploads", express.static("uploads"));
 
-// Routes
-app.use("/api/v1", ProductRoute);
+// MongoDB connection
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => console.log("✅ Database Connected Successfully"))
+  .catch((err) => console.log(err));
 
-const PORT = process.env.PORT || 5000;
+// Product schema
+const productSchema = new mongoose.Schema({
+  name: String,
+  description: String,
+  price: Number,
+  image: String,
+  stock: Number,
+  category: String,
+});
+
+const Product = mongoose.model("Product", productSchema);
+
+app.get("/products", async (req, res) => {
+  try {
+    const products = await Product.find();
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching products" });
+  }
+});
+
+
+// Server start
+const PORT = 5000;
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });
