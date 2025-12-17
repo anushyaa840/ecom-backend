@@ -3,6 +3,11 @@ import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
 import path from "path";
+import { fileURLToPath } from 'url';
+import productRoutes from './routes/productRoute.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
@@ -13,35 +18,16 @@ app.use(cors());
 app.use(express.json());
 
 // Serve images
-app.use("/uploads", express.static("uploads"));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // MongoDB connection
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("✅ Database Connected Successfully"))
-  .catch((err) => console.log(err));
+  .catch((err) => console.log("⚠️ Database connection failed, using fallback data", err.message));
 
-// Product schema
-const productSchema = new mongoose.Schema({
-  name: String,
-  description: String,
-  price: Number,
-  image: String,
-  stock: Number,
-  category: String,
-});
-
-const Product = mongoose.model("Product", productSchema);
-
-app.get("/products", async (req, res) => {
-  try {
-    const products = await Product.find();
-    res.json(products);
-  } catch (err) {
-    res.status(500).json({ message: "Error fetching products" });
-  }
-});
-
+// Routes
+app.use('/', productRoutes);
 
 // Server start
 const PORT = 5000;

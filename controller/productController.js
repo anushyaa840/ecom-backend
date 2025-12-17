@@ -1,23 +1,27 @@
-const productModel = require("../model/Product");
-const fallback = require('../data/fallbackProducts.json');
+import productModel from '../model/Product.js';
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import path from 'path';
 
-exports.getProduct = async (req, res) => {
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const fallback = JSON.parse(readFileSync(path.join(__dirname, '../data/fallbackProducts.json'), 'utf-8'));
+
+export const getProduct = async (req, res) => {
     try {
         const product = await productModel.find();
         res.json(product)
     } catch (error) {
         console.error('DB error, returning fallback products', error.message);
-        // return fallback products so frontend still works
         return res.json(fallback);
     }
 }
 
-exports.getProductById = async (req, res) => {
+export const getProductById = async (req, res) => {
     try {
         const id = req.params.id;
         const product = await productModel.findById(id);
         if (!product) {
-            // try fallback
             const f = fallback.find(p => p._id === id || String(p._id) === String(id));
             if (f) return res.json(f);
             return res.status(404).json({ message: 'Product not found' });
@@ -30,7 +34,8 @@ exports.getProductById = async (req, res) => {
         res.status(500).json({ error: 'Server error' });
     }
 }
-exports.postProduct = async (req, res) => {
+
+export const postProduct = async (req, res) => {
     const { name, description, image, price, stock, category } = req.body;
     try {
         const newProduct = new productModel({ name, description, image, price, stock, category });
@@ -42,7 +47,7 @@ exports.postProduct = async (req, res) => {
     }
 }
 
-exports.deleteProduct = async (req, res) => {
+export const deleteProduct = async (req, res) => {
     const id = req.params.id;
     const deleted = await productModel.findByIdAndDelete(id);
     if (!deleted) {
@@ -51,7 +56,7 @@ exports.deleteProduct = async (req, res) => {
     res.status(204).json({ message: "Record deleted" })
 }
 
-exports.updateProduct = async (req, res) => {
+export const updateProduct = async (req, res) => {
     try {
         const id = req.params.id;
         const { name, description, price, image, stock, category } = req.body;
